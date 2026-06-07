@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "dns": "^0.2.2",
     "iron-session": "^8.0.4",
     "mongoose": "^9.6.3",
     "next": "16.2.7",
