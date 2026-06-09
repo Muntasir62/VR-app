@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import SceneCanvas from "@/components/SceneCanvas";
-import Cube from "@/components/Cube";
-import Sphere from "@/components/Sphere";
+//import Cube from "@/components/Cube";
+//import Sphere from "@/components/Sphere";
+import DraggableCube from "@/components/DraggableCube";
+import DraggableSphere from "@/components/DraggableSphere";
 
 type ObjectType = {
   id: number;
@@ -68,6 +70,22 @@ export default function ScenePage() {
     ]);
   };
 
+  const moveObject = (
+  id: number,
+  newPosition: [number, number, number]
+) => {
+  setObjects((prev) =>
+    prev.map((obj) =>
+      obj.id === id
+        ? {
+            ...obj,
+            position: newPosition,
+          }
+        : obj
+    )
+  );
+};
+
   // ⏳ Prevent flash before auth check finishes
   if (loading) {
     return (
@@ -104,18 +122,33 @@ export default function ScenePage() {
         {objects.map((obj) => {
           if (obj.type === "cube") {
             return (
-              <Cube
+             /* <Cube
                 key={obj.id}
                 position={obj.position}
               />
+              */
+             <DraggableCube
+             key={obj.id}
+             id={obj.id}
+             position={obj.position}
+             onMove={moveObject}
+             />
+             
             );
           }
 
           return (
-            <Sphere
+            /*<Sphere
               key={obj.id}
               position={obj.position}
             />
+            */
+           <DraggableSphere
+            key={obj.id}
+            id={obj.id}
+            position={obj.position}
+            onMove={moveObject}
+            />          
           );
         })}
       </SceneCanvas>
