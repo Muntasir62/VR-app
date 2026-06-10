@@ -7,6 +7,7 @@ import SceneCanvas from "@/components/SceneCanvas";
 //import Sphere from "@/components/Sphere";
 import DraggableCube from "@/components/DraggableCube";
 import DraggableSphere from "@/components/DraggableSphere";
+import AddObjectModal from "@/components/AddObjectModal";
 
 type ObjectType = {
   id: number;
@@ -19,6 +20,11 @@ export default function ScenePage() {
 
   const [objects, setObjects] = useState<ObjectType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] =
+  useState(false);
+
+const [selectedType, setSelectedType] =
+  useState<"cube" | "sphere">("cube");
 
   // 🔐 AUTH CHECK (runs once on page load)
   useEffect(() => {
@@ -57,7 +63,9 @@ export default function ScenePage() {
         position: randomPosition(),
       },
     ]);
+
   };
+
 
   const addSphere = () => {
     setObjects((prev) => [
@@ -85,6 +93,15 @@ export default function ScenePage() {
     )
   );
 };
+const handleAddObject = () => {
+  if (selectedType === "cube") {
+    addCube();
+  } else {
+    addSphere();
+  }
+
+  setModalOpen(false);
+};
 
   // ⏳ Prevent flash before auth check finishes
   if (loading) {
@@ -105,7 +122,8 @@ export default function ScenePage() {
           padding: "20px",
         }}
       >
-        <button onClick={addCube}>
+      
+       {/* <button onClick={addCube}>
           Add Cube
         </button>
 
@@ -115,8 +133,20 @@ export default function ScenePage() {
         >
           Add Sphere
         </button>
+        */}
+        <button
+          onClick={() => setModalOpen(true)}
+>
+          Add Object
+        </button>
       </div>
-
+      <AddObjectModal
+        isOpen={modalOpen}
+        selectedType={selectedType}
+        setSelectedType={setSelectedType}
+        onAdd={handleAddObject}
+        onClose={() => setModalOpen(false)}
+      />
       {/* 3D Scene */}
       <SceneCanvas>
         {objects.map((obj) => {
