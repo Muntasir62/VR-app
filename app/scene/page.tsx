@@ -45,7 +45,25 @@ const [selectedType, setSelectedType] =
 
     checkAuth();
   }, [router]);
+useEffect(() => {
+  const loadScene = async () => {
+    try {
+      const res = await fetch("/api/scene/load");
 
+      if (!res.ok) return;
+
+      const data = await res.json();
+
+      if (data.objects) {
+        setObjects(data.objects);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  loadScene();
+}, []);
   const randomPosition = (): [number, number, number] => {
     return [
       Math.random() * 8 - 4,
@@ -103,6 +121,23 @@ const handleAddObject = () => {
   setModalOpen(false);
 };
 
+  const saveScene = async () => {
+  try {
+    const res = await fetch("/api/scene/save", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ objects }),
+    });
+
+    const data = await res.json();
+
+    alert(data.message);
+  } catch (err) {
+    console.error(err);
+  }
+};
   // ⏳ Prevent flash before auth check finishes
   if (loading) {
     return (
@@ -139,6 +174,18 @@ const handleAddObject = () => {
 >
           Add Object
         </button>
+        <button
+        onClick={saveScene}
+        style={{
+              marginLeft: "10px",
+              background: "green",
+              color: "white",
+          
+          }}
+        >
+          Save Scene
+        </button>
+        
       </div>
       <AddObjectModal
         isOpen={modalOpen}
