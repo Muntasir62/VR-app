@@ -3,30 +3,27 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import SceneCanvas from "@/components/SceneCanvas";
-//import Cube from "@/components/Cube";
-//import Sphere from "@/components/Sphere";
 import DraggableCube from "@/components/DraggableCube";
 import DraggableSphere from "@/components/DraggableSphere";
 import AddObjectModal from "@/components/AddObjectModal";
+import { useGLTF } from "@react-three/drei";
+import { SceneObject, ObjectTypeName } from "@/types/scene";
+import DraggableGLBModel from "@/components/DraggableGLBModel";
 
-type ObjectType = {
-  id: number;
-  type: "cube" | "sphere";
-  position: [number, number, number];
-};
+useGLTF.preload("/models/DeskChair.glb");
+useGLTF.preload("/models/Desk.glb");
+useGLTF.preload("/models/RobotEnemy.glb");
 
 export default function ScenePage() {
   const router = useRouter();
 
-  const [objects, setObjects] = useState<ObjectType[]>([]);
+  const [objects, setObjects] = useState<SceneObject[]>([]);
   const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] =
-  useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
-const [selectedType, setSelectedType] =
-  useState<"cube" | "sphere">("cube");
+  const [selectedType, setSelectedType] =
+    useState<ObjectTypeName>("cube");
 
-  // 🔐 AUTH CHECK (runs once on page load)
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -38,107 +35,81 @@ const [selectedType, setSelectedType] =
         }
 
         setLoading(false);
-      } catch (err) {
+      } catch {
         router.push("/login");
       }
     };
 
     checkAuth();
   }, [router]);
-useEffect(() => {
-  const loadScene = async () => {
-    try {
+
+  useEffect(() => {
+    const loadScene = async () => {
       const res = await fetch("/api/scene/load");
-
-      if (!res.ok) return;
-
       const data = await res.json();
 
-      if (data.objects) {
-        setObjects(data.objects);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      if (data.objects) setObjects(data.objects);
+    };
 
-  loadScene();
-}, []);
-  const randomPosition = (): [number, number, number] => {
-    return [
-      Math.random() * 8 - 4,
-      0.5,
-      Math.random() * 8 - 4,
-    ];
-  };
+    loadScene();
+  }, []);
 
-  const addCube = () => {
-    setObjects((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        type: "cube",
-        position: randomPosition(),
-      },
-    ]);
-
-  };
-
-
-  const addSphere = () => {
-    setObjects((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        type: "sphere",
-        position: randomPosition(),
-      },
-    ]);
-  };
+  const randomPosition = (): [number, number, number] => [
+    Math.random() * 8 - 4,
+    0.5,
+    Math.random() * 8 - 4,
+  ];
 
   const moveObject = (
-  id: number,
-  newPosition: [number, number, number]
-) => {
-  setObjects((prev) =>
-    prev.map((obj) =>
-      obj.id === id
-        ? {
-            ...obj,
-            position: newPosition,
-          }
-        : obj
-    )
-  );
-};
-const handleAddObject = () => {
-  if (selectedType === "cube") {
-    addCube();
-  } else {
-    addSphere();
-  }
+    id: number,
+    newPosition: [number, number, number]
+  ) => {
+    setObjects((prev) =>
+      prev.map((obj) =>
+        obj.id === id ? { ...obj, position: newPosition } : obj
+      )
+    );
+  };
 
-  setModalOpen(false);
-};
+  const handleAddObject = () => {
+    setObjects((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        type: selectedType,
+        position: randomPosition(),
+      },
+    ]);
+
+    setModalOpen(false);
+  };
 
   const saveScene = async () => {
-  try {
     const res = await fetch("/api/scene/save", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ objects }),
     });
 
     const data = await res.json();
-
     alert(data.message);
-  } catch (err) {
-    console.error(err);
-  }
-};
-  // ⏳ Prevent flash before auth check finishes
+  };
+
+  const modelMap: Record<string, string> = {
+    deskChair: "/models/DeskChair.glb",
+    desk: "/models/Desk.glb",
+    robot: "/models/RobotEnemy.glb",
+  };
+
+  const modelTransform: Record<
+    string,
+    { scale: number; y: number }
+  > = {
+    deskChair: { scale: 2.0, y: 0 },
+    desk: { scale: 1.6, y: 0 },
+    robot: { scale: 1.9, y: 1.6 },
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -148,45 +119,25 @@ const handleAddObject = () => {
   }
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
-      {/* UI Controls */}
-      <div
-        style={{
-          position: "absolute",
-          zIndex: 100,
-          padding: "20px",
-        }}
-      >
-      
-       {/* <button onClick={addCube}>
-          Add Cube
+    <div className="w-screen h-screen relative">
+      {/* UI */}
+      <div className="absolute top-4 left-4 flex gap-3 p-3 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 z-10">
+        <button
+          onClick={saveScene}
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold"
+        >
+          💾 Save Scene
         </button>
 
         <button
-          onClick={addSphere}
-          style={{ marginLeft: "10px" }}
-        >
-          Add Sphere
-        </button>
-        */}
-        <button
           onClick={() => setModalOpen(true)}
->
-          Add Object
-        </button>
-        <button
-        onClick={saveScene}
-        style={{
-              marginLeft: "10px",
-              background: "green",
-              color: "white",
-          
-          }}
+          className="px-4 py-2 rounded-lg bg-white/10 text-white border border-white/20"
         >
-          Save Scene
+          ➕ Add Object
         </button>
-        
       </div>
+
+      {/* Modal */}
       <AddObjectModal
         isOpen={modalOpen}
         selectedType={selectedType}
@@ -194,38 +145,47 @@ const handleAddObject = () => {
         onAdd={handleAddObject}
         onClose={() => setModalOpen(false)}
       />
-      {/* 3D Scene */}
+
+      {/* Scene */}
       <SceneCanvas>
         {objects.map((obj) => {
           if (obj.type === "cube") {
             return (
-             /* <Cube
+              <DraggableCube
                 key={obj.id}
+                id={obj.id}
                 position={obj.position}
+                onMove={moveObject}
               />
-              */
-             <DraggableCube
-             key={obj.id}
-             id={obj.id}
-             position={obj.position}
-             onMove={moveObject}
-             />
-             
             );
           }
 
+          if (obj.type === "sphere") {
+            return (
+              <DraggableSphere
+                key={obj.id}
+                id={obj.id}
+                position={obj.position}
+                onMove={moveObject}
+              />
+            );
+          }
+
+          const t = modelTransform[obj.type];
+
           return (
-            /*<Sphere
+            <DraggableGLBModel
               key={obj.id}
-              position={obj.position}
+              id={obj.id}
+              path={modelMap[obj.type]}
+              position={[
+                obj.position[0],
+                t?.y ?? obj.position[1],
+                obj.position[2],
+              ]}
+              scale={t?.scale ?? 0.5}
+              onMove={moveObject}
             />
-            */
-           <DraggableSphere
-            key={obj.id}
-            id={obj.id}
-            position={obj.position}
-            onMove={moveObject}
-            />          
           );
         })}
       </SceneCanvas>
