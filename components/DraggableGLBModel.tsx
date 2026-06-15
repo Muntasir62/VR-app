@@ -42,7 +42,7 @@ export default function DraggableGLBModel({
 
         e.stopPropagation();
 
-        // 🔥 convert pointer movement to world movement
+        // convert pointer movement to world movement
         const [x, , z] = position;
 
         onMove(id, [

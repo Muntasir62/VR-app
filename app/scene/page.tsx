@@ -94,7 +94,17 @@ export default function ScenePage() {
     const data = await res.json();
     alert(data.message);
   };
+const logout = async () => {
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+    });
 
+    router.push("/login");
+  } catch (err) {
+    console.error(err);
+  }
+};
   const modelMap: Record<string, string> = {
     deskChair: "/models/DeskChair.glb",
     desk: "/models/Desk.glb",
@@ -135,6 +145,12 @@ export default function ScenePage() {
         >
           ➕ Add Object
         </button>
+        <button
+      onClick={logout}
+      className="px-4 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition"
+       >
+      🚪 Logout
+       </button>
       </div>
 
       {/* Modal */}

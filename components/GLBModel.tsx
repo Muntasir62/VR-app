@@ -14,7 +14,7 @@ export default function GLBModel({ path, position }: Props) {
     <primitive
       object={scene.clone()}
       position={position}
-      scale={0.5}   // 🔥 IMPORTANT FIX (adjust size here)
+      scale={0.5}   // (adjust size )
     />
   );
 }
